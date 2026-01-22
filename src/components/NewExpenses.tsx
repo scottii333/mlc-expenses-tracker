@@ -58,6 +58,13 @@ const parseYYYYMMDD = (value: string): Date | undefined => {
   return new Date(y, m - 1, d);
 };
 
+const formatYYYYMMDD = (date: Date): string => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
+
 const toFormFromExpense = (expense: ExpenseRow): ExpenseForm => ({
   category: expense.category ?? "",
   amount:
@@ -72,14 +79,17 @@ export type NewExpensesProps = {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   initialExpense?: ExpenseRow | null;
+
+  // NEW: send saved rows back to TableData
+  onSaveExpenses?: (rows: ExpenseRow[]) => void;
 };
 
 export const NewExpenses = ({
   open: controlledOpen,
   onOpenChange,
   initialExpense,
+  onSaveExpenses,
 }: NewExpensesProps) => {
-  // Keep internal state so old behavior still works if parent doesn't control it
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
 
   const isControlled = typeof controlledOpen === "boolean";
@@ -90,11 +100,7 @@ export const NewExpenses = ({
     onOpenChange?.(next);
   };
 
-  // This key forces a remount of the inner component whenever:
-  // - dialog is opened
-  // - a different expense is selected for editing
   const dialogKey = useMemo(() => {
-    // When closed, keep a stable key (doesn't matter much because content isn't visible)
     if (!open) return "closed";
     return initialExpense ? `edit-${initialExpense.id}` : "create";
   }, [open, initialExpense]);
@@ -110,11 +116,14 @@ export const NewExpenses = ({
           </DialogTrigger>
 
           <DialogContent>
-            {/* Inner component remounts based on key, so no effect/setState needed */}
             <NewExpensesInner
               key={dialogKey}
               initialExpense={initialExpense}
-              onSave={() => setOpen(false)}
+              onSave={(rows) => {
+                onSaveExpenses?.(rows);
+                toast.success("Expenses have been saved.");
+                setOpen(false);
+              }}
             />
           </DialogContent>
         </Dialog>
@@ -128,7 +137,7 @@ function NewExpensesInner({
   onSave,
 }: {
   initialExpense?: ExpenseRow | null;
-  onSave: () => void;
+  onSave: (rows: ExpenseRow[]) => void;
 }) {
   const initialForms = useMemo(() => {
     if (initialExpense) return [toFormFromExpense(initialExpense)];
@@ -137,7 +146,6 @@ function NewExpensesInner({
 
   const [forms, setForms] = useState<ExpenseForm[]>(() => initialForms);
 
-  // For form field changes
   const updateField = (
     idx: number,
     field: keyof ExpenseForm,
@@ -150,13 +158,11 @@ function NewExpensesInner({
     });
   };
 
-  // Add new form and show toast
   const addForm = () => {
     setForms((prev) => [...prev, createEmptyForm()]);
     toast.success("A new expense form has been added!");
   };
 
-  // Remove form and show toast
   const removeForm = (idx: number) => {
     setForms((prev) =>
       prev.length === 1 ? prev : prev.filter((_, i) => i !== idx),
@@ -164,11 +170,23 @@ function NewExpensesInner({
     toast.error("Expense form removed.");
   };
 
-  // Save and show toast, then close modal
   const saveExpenses = () => {
-    toast.success("Expenses have been saved.");
-    onSave();
-    // Save logic here
+    // Convert forms -> ExpenseRow(s)
+    const rows: ExpenseRow[] = forms.map((f) => ({
+      id: initialExpense?.id ?? 0, // TableData will overwrite ids for create-mode
+      category: f.category,
+      description: f.description,
+      amount: Number(f.amount || 0),
+      date: f.date ? formatYYYYMMDD(f.date) : "",
+    }));
+
+    // For edit mode, ensure we only send one row (your UI supports multiple, but editing a single row should update one)
+    if (initialExpense) {
+      onSave([rows[0]]);
+      return;
+    }
+
+    onSave(rows);
   };
 
   return (
@@ -205,7 +223,8 @@ function NewExpensesInner({
                   <SelectContent>
                     <SelectGroup>
                       <SelectLabel>Select bill</SelectLabel>
-                      <SelectItem value="all">All</SelectItem>
+
+                      {/* IMPORTANT: values must match what you store in table rows */}
                       <SelectItem value="Transportation">
                         Transportation
                       </SelectItem>
@@ -227,7 +246,17 @@ function NewExpensesInner({
                 className="flex-1 bg-white/50 backdrop-blur-lg border border-black/20 p-2 rounded-md"
                 placeholder="Enter amount"
                 value={form.amount}
-                onChange={(e) => updateField(idx, "amount", e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value;
+
+                  // numbers only
+                  if (!/^\d*$/.test(value)) return;
+
+                  // prevent leading zero
+                  if (value.length > 1 && value.startsWith("0")) return;
+
+                  updateField(idx, "amount", value);
+                }}
               />
             </div>
 
