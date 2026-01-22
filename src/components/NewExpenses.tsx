@@ -80,7 +80,7 @@ export type NewExpensesProps = {
   onOpenChange?: (open: boolean) => void;
   initialExpense?: ExpenseRow | null;
 
-  // NEW: send saved rows back to TableData
+  // send saved rows back to TableData
   onSaveExpenses?: (rows: ExpenseRow[]) => void;
 };
 
@@ -172,19 +172,16 @@ function NewExpensesInner({
 
   const saveExpenses = () => {
     // Convert forms -> ExpenseRow(s)
-    const rows: ExpenseRow[] = forms.map((f) => ({
-      id: initialExpense?.id ?? 0, // TableData will overwrite ids for create-mode
+    const rows: ExpenseRow[] = forms.map((f, idx) => ({
+      // IMPORTANT:
+      // - If editing, ONLY the first form (idx=0) keeps initialExpense.id (update target)
+      // - Any extra forms are new records (id=0) and should be created by TableData
+      id: initialExpense && idx === 0 ? initialExpense.id : 0,
       category: f.category,
       description: f.description,
       amount: Number(f.amount || 0),
       date: f.date ? formatYYYYMMDD(f.date) : "",
     }));
-
-    // For edit mode, ensure we only send one row (your UI supports multiple, but editing a single row should update one)
-    if (initialExpense) {
-      onSave([rows[0]]);
-      return;
-    }
 
     onSave(rows);
   };
@@ -223,8 +220,6 @@ function NewExpensesInner({
                   <SelectContent>
                     <SelectGroup>
                       <SelectLabel>Select bill</SelectLabel>
-
-                      {/* IMPORTANT: values must match what you store in table rows */}
                       <SelectItem value="Transportation">
                         Transportation
                       </SelectItem>
@@ -248,13 +243,8 @@ function NewExpensesInner({
                 value={form.amount}
                 onChange={(e) => {
                   const value = e.target.value;
-
-                  // numbers only
                   if (!/^\d*$/.test(value)) return;
-
-                  // prevent leading zero
                   if (value.length > 1 && value.startsWith("0")) return;
-
                   updateField(idx, "amount", value);
                 }}
               />
