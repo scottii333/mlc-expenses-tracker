@@ -6,6 +6,7 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import api from "@/lib/axios";
 import type { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 type AuthMode = "login" | "signup";
 type AuthFields = {
@@ -14,6 +15,7 @@ type AuthFields = {
   firstName?: string;
   lastName?: string;
 };
+
 type ApiResponse = {
   message?: string;
   error?: string;
@@ -30,6 +32,7 @@ const labels: Record<keyof AuthFields, string> = {
 export const LoginPage: React.FC = () => {
   const router = useRouter();
   const [mode, setMode] = useState<AuthMode>("login");
+
   const {
     register,
     handleSubmit,
@@ -42,8 +45,14 @@ export const LoginPage: React.FC = () => {
       const endpoint = mode === "signup" ? "/signup" : "/login";
       const resp = await api.post<ApiResponse>(endpoint, data);
 
-      alert(
-        `${mode === "signup" ? "Sign up" : "Login"} success: ${JSON.stringify(resp.data)}`,
+      toast.success(
+        mode === "signup" ? "Signup successful" : "Login successful",
+        {
+          description:
+            typeof resp.data?.message === "string"
+              ? resp.data.message
+              : undefined,
+        },
       );
 
       reset();
@@ -53,9 +62,12 @@ export const LoginPage: React.FC = () => {
       }
     } catch (err) {
       const error = err as AxiosError<ApiResponse>;
-      alert(
-        error.response?.data?.error || error.message || "Something went wrong",
-      );
+      const msg =
+        error.response?.data?.error || error.message || "Something went wrong";
+
+      toast.error(mode === "signup" ? "Signup failed" : "Login failed", {
+        description: msg,
+      });
     }
   };
 
@@ -68,6 +80,7 @@ export const LoginPage: React.FC = () => {
         style={{ objectFit: "cover" }}
         priority
       />
+
       <div
         className="
           absolute w-full md:w-1/2 h-full
@@ -87,21 +100,17 @@ export const LoginPage: React.FC = () => {
           <h2 className="pt-2 text-3xl font-bold text-white text-center drop-shadow mb-0">
             Hey there!
           </h2>
+
           <div className="mb-2 text-center text-white text-lg font-light drop-shadow">
             Is this your first time here?
           </div>
 
-          {/* Minimal Glassmorphism Tabs */}
           <div className="flex w-full bg-white/10 border border-white/30 rounded-lg overflow-hidden mb-2">
             <button
               type="button"
               onClick={() => setMode("login")}
               className={`flex-1 py-2 px-4 text-white font-medium transition border border-white/30
-                ${
-                  mode === "login"
-                    ? "bg-white/15 backdrop-blur-sm"
-                    : "bg-transparent"
-                }
+                ${mode === "login" ? "bg-white/15 backdrop-blur-sm" : "bg-transparent"}
               `}
               style={{
                 borderRight: "1px solid rgba(255,255,255,0.2)",
@@ -110,15 +119,12 @@ export const LoginPage: React.FC = () => {
             >
               No, log me in.
             </button>
+
             <button
               type="button"
               onClick={() => setMode("signup")}
               className={`flex-1 py-2 px-4 text-white font-medium transition border border-white/30
-                ${
-                  mode === "signup"
-                    ? "bg-white/15 backdrop-blur-sm"
-                    : "bg-transparent"
-                }
+                ${mode === "signup" ? "bg-white/15 backdrop-blur-sm" : "bg-transparent"}
               `}
               style={{
                 borderRadius: mode === "signup" ? "0 0.5rem 0.5rem 0" : "0",
@@ -128,18 +134,17 @@ export const LoginPage: React.FC = () => {
             </button>
           </div>
 
-          {/* Form Fields and rest of your form remain unchanged... */}
           <div className="w-full flex flex-col space-y-4">
             {mode === "signup" && (
               <div className="flex space-x-3">
                 <div className="w-1/2">
                   <label className="block text-white text-sm mb-1 px-1">
-                    {labels["firstName"]}
+                    {labels.firstName}
                   </label>
                   <input
                     {...register("firstName", { required: mode === "signup" })}
                     className="w-full rounded-md px-3 py-2 bg-white/30 placeholder:text-white/60 text-white font-medium outline-none border border-white/25 focus:border-white/50 transition"
-                    placeholder={labels["firstName"]}
+                    placeholder={labels.firstName}
                   />
                   {errors.firstName && (
                     <span className="text-xs text-red-200">
@@ -147,14 +152,15 @@ export const LoginPage: React.FC = () => {
                     </span>
                   )}
                 </div>
+
                 <div className="w-1/2">
                   <label className="block text-white text-sm mb-1 px-1">
-                    {labels["lastName"]}
+                    {labels.lastName}
                   </label>
                   <input
                     {...register("lastName", { required: mode === "signup" })}
                     className="w-full rounded-md px-3 py-2 bg-white/30 placeholder:text-white/60 text-white font-medium outline-none border border-white/25 focus:border-white/50 transition"
-                    placeholder={labels["lastName"]}
+                    placeholder={labels.lastName}
                   />
                   {errors.lastName && (
                     <span className="text-xs text-red-200">
@@ -170,23 +176,35 @@ export const LoginPage: React.FC = () => {
                 {labels.email}
               </label>
               <input
-                {...register("email", { required: true })}
+                {...register("email", {
+                  required: "Email is required",
+                  pattern: {
+                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                    message: "Invalid email format",
+                  },
+                  validate: (value) =>
+                    value.trim().toLowerCase().endsWith("@gmail.com") ||
+                    "Only Gmail addresses (@gmail.com) are allowed",
+                })}
                 className="w-full rounded-md px-3 py-2 bg-white/30 placeholder:text-white/60 text-white font-medium outline-none border border-white/25 focus:border-white/50 transition"
                 placeholder="Email"
                 type="email"
-                autoComplete={mode === "signup" ? "new-email" : "current-email"}
+                autoComplete="email"
               />
               {errors.email && (
-                <span className="text-xs text-red-200">Email is required</span>
+                <span className="text-xs text-red-200">
+                  {errors.email.message}
+                </span>
               )}
             </div>
+
             <div className="w-full">
               <label className="block text-white text-sm mb-1 px-1">
                 {labels.password}
               </label>
               <input
                 type="password"
-                {...register("password", { required: true })}
+                {...register("password", { required: "Password is required" })}
                 className="w-full rounded-md px-3 py-2 bg-white/30 placeholder:text-white/60 text-white font-medium outline-none border border-white/25 focus:border-white/50 transition"
                 placeholder="Password"
                 autoComplete={
@@ -195,7 +213,7 @@ export const LoginPage: React.FC = () => {
               />
               {errors.password && (
                 <span className="text-xs text-red-200">
-                  Password is required
+                  {errors.password.message}
                 </span>
               )}
             </div>
@@ -204,13 +222,13 @@ export const LoginPage: React.FC = () => {
           <button
             type="submit"
             className="
-    w-full mt-2 py-2 rounded-md
-    bg-[#495947]
-    text-white font-semibold text-lg
-    shadow-inner
-    transition
-    hover:bg-[#3f4d3d]
-  "
+              w-full mt-2 py-2 rounded-md
+              bg-[#495947]
+              text-white font-semibold text-lg
+              shadow-inner
+              transition
+              hover:bg-[#3f4d3d]
+            "
             disabled={isSubmitting}
           >
             {isSubmitting
