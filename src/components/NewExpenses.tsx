@@ -171,16 +171,39 @@ function NewExpensesInner({
   };
 
   const saveExpenses = () => {
-    // Convert forms -> ExpenseRow(s)
+    // ✅ frontend validation (must match backend requirements)
+    for (let i = 0; i < forms.length; i++) {
+      const f = forms[i];
+
+      const categoryOk = !!f.category?.trim();
+      const descOk = !!f.description?.trim();
+      const dateOk = !!f.date;
+
+      const amountNum = Number(f.amount);
+      const amountOk = Number.isFinite(amountNum) && amountNum > 0;
+
+      if (!categoryOk || !descOk || !dateOk || !amountOk) {
+        toast.error("Please complete all fields", {
+          description: `Form #${i + 1}: ${
+            !categoryOk
+              ? "Category is required."
+              : !descOk
+                ? "Description is required."
+                : !amountOk
+                  ? "Amount must be greater than 0."
+                  : "Date is required."
+          }`,
+        });
+        return;
+      }
+    }
+
     const rows: ExpenseRow[] = forms.map((f, idx) => ({
-      // IMPORTANT:
-      // - If editing, ONLY the first form (idx=0) keeps initialExpense.id (update target)
-      // - Any extra forms are new records (id=0) and should be created by TableData
       id: initialExpense && idx === 0 ? initialExpense.id : 0,
-      category: f.category,
-      description: f.description,
-      amount: Number(f.amount || 0),
-      date: f.date ? formatYYYYMMDD(f.date) : "",
+      category: f.category.trim(),
+      description: f.description.trim(),
+      amount: Number(f.amount),
+      date: formatYYYYMMDD(f.date!), // safe because validated
     }));
 
     onSave(rows);
