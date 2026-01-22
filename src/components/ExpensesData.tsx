@@ -64,7 +64,7 @@ export const ExpensesData = () => {
         </div>
         <Select>
           <SelectTrigger className="w-full bg-white/50 backdrop-blur-lg border border-black/20">
-            <SelectValue placeholder="Select Date" />
+            <SelectValue placeholder="Select category" />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
@@ -78,7 +78,7 @@ export const ExpensesData = () => {
         </Select>
         <Popover>
           <PopoverTrigger asChild>
-            <button className="px-4 py-2 w-full rounded-md bg-white/50 backdrop-blur-lg border border-black/20">
+            <button className="flex justify-around text-black/55  items-center text-sm py-2 w-full rounded-md bg-white/50 backdrop-blur-lg border border-black/20">
               Date Range
               <FontAwesomeIcon icon={faCalendar} className="ml-2" />
             </button>
