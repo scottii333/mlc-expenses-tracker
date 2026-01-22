@@ -1,26 +1,29 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faTrashCan,
-  faPenToSquare,
-  faPlus,
-  faFileArrowDown,
-} from "@fortawesome/free-solid-svg-icons";
+import { faTrashCan, faPenToSquare } from "@fortawesome/free-solid-svg-icons";
 import { Label } from "./ui/label";
 import { NewExpenses } from "./NewExpenses";
+
+export type ExpenseRow = {
+  id: number;
+  category: string;
+  description: string;
+  amount: number;
+  date: string; // YYYY-MM-DD
+};
+
 export const TableData = () => {
-  const expenses = [
+  const [expenses, setExpenses] = useState<ExpenseRow[]>([
     {
       id: 1,
       category: "Food",
@@ -42,7 +45,19 @@ export const TableData = () => {
       amount: 1200,
       date: "2026-01-20",
     },
-  ];
+  ]);
+
+  const [openExpensesDialog, setOpenExpensesDialog] = useState(false);
+  const [editExpense, setEditExpense] = useState<ExpenseRow | null>(null);
+
+  const handleDelete = (id: number) => {
+    setExpenses((prev) => prev.filter((expense) => expense.id !== id));
+  };
+
+  const handleEdit = (expense: ExpenseRow) => {
+    setEditExpense(expense);
+    setOpenExpensesDialog(true);
+  };
 
   return (
     <div className="overflow-hidden rounded-xl shadow-md">
@@ -64,11 +79,12 @@ export const TableData = () => {
             <TableHead className="text-white p-5">Action</TableHead>
           </TableRow>
         </TableHeader>
+
         <TableBody className="bg-white/30 backdrop-blur-lg border border-black/20 rounded-b-xl">
           {expenses.map((expense) => (
             <TableRow
               key={expense.id}
-              className="border-b border-black last:border-b-0" // adds border-bottom to each row, except the last one
+              className="border-b border-black last:border-b-0"
             >
               <TableCell className="p-5">{expense.category}</TableCell>
               <TableCell className="p-5">{expense.description}</TableCell>
@@ -77,23 +93,32 @@ export const TableData = () => {
               <TableCell className="p-5">
                 <div className="flex gap-4">
                   <div className="flex gap-2 items-center">
-                    {" "}
                     <FontAwesomeIcon
-                      id="Edit"
+                      id={`Edit-${expense.id}`}
                       icon={faPenToSquare}
                       className="text-[#688F6B] opacity-60 cursor-pointer text-xl hover:scale-110 transition-transform"
+                      onClick={() => handleEdit(expense)}
                     />
-                    <Label htmlFor="Edit" className="font-normal">
+                    <Label
+                      htmlFor={`Edit-${expense.id}`}
+                      className="font-normal cursor-pointer"
+                      onClick={() => handleEdit(expense)}
+                    >
                       Edit
                     </Label>
                   </div>
+
                   <div className="flex gap-2 items-center">
                     <FontAwesomeIcon
-                      id="Delete"
+                      id={`Delete-${expense.id}`}
                       icon={faTrashCan}
-                      className="text-[#BD2828]  cursor-pointer text-xl hover:scale-110 transition-transform"
+                      className="text-[#BD2828] cursor-pointer text-xl hover:scale-110 transition-transform"
+                      onClick={() => handleDelete(expense.id)}
                     />
-                    <Label htmlFor="Delete" className="font-normal">
+                    <Label
+                      htmlFor={`Delete-${expense.id}`}
+                      className="font-normal"
+                    >
                       Delete
                     </Label>
                   </div>
@@ -104,7 +129,16 @@ export const TableData = () => {
         </TableBody>
       </Table>
 
-      <NewExpenses />
+      {/* Keep NewExpenses rendered as before, but now it's controlled and can be opened from Edit or + */}
+      <NewExpenses
+        open={openExpensesDialog}
+        onOpenChange={(next) => {
+          setOpenExpensesDialog(next);
+          // When closing, clear edit state so next open from + is empty
+          if (!next) setEditExpense(null);
+        }}
+        initialExpense={editExpense}
+      />
     </div>
   );
 };
