@@ -35,6 +35,8 @@ import {
 } from "@/components/ui/popover";
 import { Input } from "./ui/input";
 
+import { toast } from "sonner";
+
 type ExpenseForm = {
   category: string;
   amount: string;
@@ -51,6 +53,7 @@ const createEmptyForm = (): ExpenseForm => ({
 
 export const NewExpenses = () => {
   const [forms, setForms] = useState<ExpenseForm[]>([createEmptyForm()]);
+  const [open, setOpen] = useState(false); // dialog state
 
   // For form field changes
   const updateField = (
@@ -65,27 +68,31 @@ export const NewExpenses = () => {
     });
   };
 
-  // Add new form
+  // Add new form and show toast
   const addForm = () => {
     setForms((prev) => [...prev, createEmptyForm()]);
+    toast.success("A new expense form has been added!");
   };
 
-  // Remove form
+  // Remove form and show toast
   const removeForm = (idx: number) => {
     setForms((prev) =>
       prev.length === 1 ? prev : prev.filter((_, i) => i !== idx),
     );
+    toast.error("Expense form removed.");
   };
 
+  // Save and show toast, then close modal
   const saveExpenses = () => {
-    alert(JSON.stringify(forms, null, 2));
-    // your save logic here
+    toast.success("Expenses have been saved.");
+    setOpen(false); // closes modal
+    // Save logic here
   };
 
   return (
     <section>
       <div className="fixed bottom-5 right-10">
-        <Dialog>
+        <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button className="bg-[#688F6B] cursor-pointer text-2xl h-15 w-15 rounded-full hover:scale-110 transition-all duration-300 hover:bg-green-700">
               <FontAwesomeIcon icon={faPlus} />
@@ -196,6 +203,7 @@ export const NewExpenses = () => {
                     className="w-full bg-[#BD2828] opacity-90 hover:bg-red-700"
                     type="button"
                     onClick={() => removeForm(idx)}
+                    disabled={forms.length === 1}
                   >
                     Remove
                   </Button>
