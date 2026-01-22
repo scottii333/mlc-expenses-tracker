@@ -2,32 +2,40 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { SESSION_COOKIE_NAME, verifySessionJwt } from "@/lib/session";
 
+async function isAuthenticated(req: NextRequest) {
+  const token = req.cookies.get(SESSION_COOKIE_NAME)?.value;
+  if (!token) return false;
+
+  try {
+    await verifySessionJwt(token);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // protect dashboard routes
-  if (pathname.startsWith("/dashboard")) {
-    const token = req.cookies.get(SESSION_COOKIE_NAME)?.value;
+  const authed = await isAuthenticated(req);
 
-    if (!token) {
-      const url = req.nextUrl.clone();
-      url.pathname = "/";
-      return NextResponse.redirect(url);
-    }
+  // ✅ if logged in, block "/" (login page) and go dashboard
+  if (pathname === "/" && authed) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/dashboard";
+    return NextResponse.redirect(url);
+  }
 
-    try {
-      await verifySessionJwt(token);
-      return NextResponse.next();
-    } catch {
-      const url = req.nextUrl.clone();
-      url.pathname = "/";
-      return NextResponse.redirect(url);
-    }
+  // ✅ protect dashboard
+  if (pathname.startsWith("/dashboard") && !authed) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/";
+    return NextResponse.redirect(url);
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*"],
+  matcher: ["/", "/dashboard/:path*"],
 };
