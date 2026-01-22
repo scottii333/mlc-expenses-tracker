@@ -34,6 +34,15 @@ async function ensureUsersTable() {
   `);
 }
 
+function isValidEmailFormat(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function isGmail(email: string) {
+  // normalizeEmail already lowercases, but keep it safe:
+  return email.trim().toLowerCase().endsWith("@gmail.com");
+}
+
 export async function POST(req: Request) {
   try {
     const body = (await req.json()) as SignupBody;
@@ -47,6 +56,23 @@ export async function POST(req: Request) {
         { status: 400 },
       );
     }
+
+    // must be correct email format
+    if (!isValidEmailFormat(email)) {
+      return NextResponse.json(
+        { error: "Invalid email format" },
+        { status: 400 },
+      );
+    }
+
+    // must be gmail
+    if (!isGmail(email)) {
+      return NextResponse.json(
+        { error: "Only Gmail addresses (@gmail.com) are allowed" },
+        { status: 400 },
+      );
+    }
+
     if (password.length < 8) {
       return NextResponse.json(
         { error: "Password must be at least 8 characters" },
@@ -58,7 +84,7 @@ export async function POST(req: Request) {
 
     const email_hash = hashEmail(email);
 
-    // 1) check if email exists
+    // check if email exists
     const exists = await pool.query(
       "SELECT id FROM public.users WHERE email_hash = $1 LIMIT 1",
       [email_hash],
@@ -71,7 +97,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // 2) insert user
+    // insert user
     const password_hash = await bcrypt.hash(password, 12);
     const { email_enc, email_iv, email_tag } = encryptEmail(email);
 
@@ -99,7 +125,7 @@ export async function POST(req: Request) {
 
     const user = inserted.rows[0];
 
-    // 3) create session jwt + cookie
+    // create session jwt + cookie
     const token = await signSessionJwt({
       sub: user.id,
       email_hash,
