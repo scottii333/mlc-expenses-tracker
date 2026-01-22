@@ -199,6 +199,7 @@ export const LoginPage: React.FC = () => {
               <label className="block text-white text-sm mb-1 px-1">
                 {labels.password}
               </label>
+
               <input
                 type="password"
                 {...register("password", { required: "Password is required" })}
@@ -208,6 +209,7 @@ export const LoginPage: React.FC = () => {
                   mode === "signup" ? "new-password" : "current-password"
                 }
               />
+
               {errors.password && (
                 <span className="text-xs text-red-200">
                   {errors.password.message}
@@ -236,17 +238,6 @@ export const LoginPage: React.FC = () => {
                 ? "Create Account"
                 : "Log In"}
           </button>
-
-          {/* {mode === "login" && (
-            <div className="w-full flex justify-end mt-1">
-              <a
-                href="#"
-                className="text-white text-xs underline hover:text-white/80 transition"
-              >
-                Forgot password?
-              </a>
-            </div>
-          )} */}
         </form>
       </div>
     </section>
