@@ -59,6 +59,9 @@ export const TableData = () => {
     setOpenExpensesDialog(true);
   };
 
+  const getNextId = (list: ExpenseRow[]) =>
+    list.length ? Math.max(...list.map((x) => x.id)) + 1 : 1;
+
   return (
     <div className="overflow-hidden rounded-xl shadow-md">
       <Table className="min-w-full">
@@ -129,15 +132,27 @@ export const TableData = () => {
         </TableBody>
       </Table>
 
-      {/* Keep NewExpenses rendered as before, but now it's controlled and can be opened from Edit or + */}
       <NewExpenses
         open={openExpensesDialog}
         onOpenChange={(next) => {
           setOpenExpensesDialog(next);
-          // When closing, clear edit state so next open from + is empty
-          if (!next) setEditExpense(null);
+          if (!next) setEditExpense(null); // important so "+" opens empty next time
         }}
         initialExpense={editExpense}
+        onSaveExpenses={(savedRows) => {
+          setExpenses((prev) => {
+            // EDIT mode: update just one row (we will send one row)
+            if (editExpense) {
+              const updated = savedRows[0];
+              return prev.map((e) => (e.id === editExpense.id ? updated : e));
+            }
+
+            // CREATE mode: append all new rows with fresh ids
+            let nextId = getNextId(prev);
+            const toAdd = savedRows.map((r) => ({ ...r, id: nextId++ }));
+            return [...prev, ...toAdd];
+          });
+        }}
       />
     </div>
   );
