@@ -30,7 +30,7 @@ type OneExpenseResponse = { expense: ExpenseRow };
 export type TableFilters = {
   search: string;
   category: string; // "all" or exact category
-  date?: Date; // selected date (single)
+  dateRange?: { from?: Date; to?: Date };
 };
 
 function parseYYYYMMDD(value: string): Date | undefined {
@@ -62,7 +62,6 @@ export const TableData = ({
       const resp = await api.get<GetExpensesResponse>("/expenses");
       const list = resp.data.expenses ?? [];
       setExpenses(list);
-      onExpensesChange?.(list);
     } catch {
       toast.error("Failed to load expenses");
     } finally {
@@ -75,11 +74,31 @@ export const TableData = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ✅ filtering stays pure (no setState / no onExpensesChange here)
   const filteredExpenses = useMemo(() => {
     const search = filters.search.trim().toLowerCase();
     const category = (filters.category || "all").toLowerCase();
-    const selectedDate = filters.date;
+    const range = filters.dateRange;
+
+    // normalize range bounds
+    const from = range?.from
+      ? new Date(
+          range.from.getFullYear(),
+          range.from.getMonth(),
+          range.from.getDate(),
+        )
+      : undefined;
+
+    const to = range?.to
+      ? new Date(
+          range.to.getFullYear(),
+          range.to.getMonth(),
+          range.to.getDate(),
+          23,
+          59,
+          59,
+          999,
+        )
+      : undefined;
 
     return expenses.filter((e) => {
       if (search) {
@@ -92,16 +111,14 @@ export const TableData = ({
         if (e.category.toLowerCase() !== category) return false;
       }
 
-      if (selectedDate) {
+      if (from || to) {
         const d = parseYYYYMMDD(e.date);
         if (!d) return false;
-        if (
-          d.getFullYear() !== selectedDate.getFullYear() ||
-          d.getMonth() !== selectedDate.getMonth() ||
-          d.getDate() !== selectedDate.getDate()
-        ) {
-          return false;
-        }
+
+        const dd = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+        if (from && dd < from) return false;
+        if (to && dd > to) return false;
       }
 
       return true;
@@ -118,7 +135,7 @@ export const TableData = ({
       await api.delete(`/expenses/${id}`);
       setExpenses((prev) => {
         const next = prev.filter((x) => x.id !== id);
-        onExpensesChange?.(next);
+
         return next;
       });
       toast.success("Deleted");
@@ -246,7 +263,7 @@ export const TableData = ({
                 const next = prev.map((e) =>
                   e.id === updated.id ? updated : e,
                 );
-                onExpensesChange?.(next);
+
                 return next;
               });
             }
@@ -265,7 +282,7 @@ export const TableData = ({
 
               setExpenses((prev) => {
                 const next = [...created, ...prev];
-                onExpensesChange?.(next);
+
                 return next;
               });
             }
