@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useForm, SubmitHandler } from "react-hook-form";
 import api from "@/lib/axios";
 import type { AxiosError } from "axios";
+import { useRouter } from "next/navigation";
 
 type AuthMode = "login" | "signup";
 type AuthFields = {
@@ -27,6 +28,7 @@ const labels: Record<keyof AuthFields, string> = {
 };
 
 export const LoginPage: React.FC = () => {
+  const router = useRouter();
   const [mode, setMode] = useState<AuthMode>("login");
   const {
     register,
@@ -39,10 +41,16 @@ export const LoginPage: React.FC = () => {
     try {
       const endpoint = mode === "signup" ? "/signup" : "/login";
       const resp = await api.post<ApiResponse>(endpoint, data);
+
       alert(
         `${mode === "signup" ? "Sign up" : "Login"} success: ${JSON.stringify(resp.data)}`,
       );
+
       reset();
+
+      if (mode === "signup") {
+        router.push("/dashboard");
+      }
     } catch (err) {
       const error = err as AxiosError<ApiResponse>;
       alert(
