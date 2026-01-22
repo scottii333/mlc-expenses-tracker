@@ -56,10 +56,7 @@ export const LoginPage: React.FC = () => {
       );
 
       reset();
-
-      if (mode === "signup") {
-        router.push("/dashboard");
-      }
+      router.push("/dashboard");
     } catch (err) {
       const error = err as AxiosError<ApiResponse>;
       const msg =
@@ -240,7 +237,7 @@ export const LoginPage: React.FC = () => {
                 : "Log In"}
           </button>
 
-          {mode === "login" && (
+          {/* {mode === "login" && (
             <div className="w-full flex justify-end mt-1">
               <a
                 href="#"
@@ -249,7 +246,7 @@ export const LoginPage: React.FC = () => {
                 Forgot password?
               </a>
             </div>
-          )}
+          )} */}
         </form>
       </div>
     </section>
