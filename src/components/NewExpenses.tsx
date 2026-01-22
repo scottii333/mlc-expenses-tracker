@@ -35,8 +35,52 @@ import {
 } from "@/components/ui/popover";
 import { Input } from "./ui/input";
 
+type ExpenseForm = {
+  category: string;
+  amount: string;
+  description: string;
+  date: Date | undefined;
+};
+
+const createEmptyForm = (): ExpenseForm => ({
+  category: "",
+  amount: "",
+  description: "",
+  date: undefined,
+});
+
 export const NewExpenses = () => {
-  const [date, setDate] = React.useState<Date | undefined>(undefined);
+  const [forms, setForms] = useState<ExpenseForm[]>([createEmptyForm()]);
+
+  // For form field changes
+  const updateField = (
+    idx: number,
+    field: keyof ExpenseForm,
+    value: string | Date | undefined,
+  ) => {
+    setForms((prev) => {
+      const updated = [...prev];
+      updated[idx] = { ...updated[idx], [field]: value };
+      return updated;
+    });
+  };
+
+  // Add new form
+  const addForm = () => {
+    setForms((prev) => [...prev, createEmptyForm()]);
+  };
+
+  // Remove form
+  const removeForm = (idx: number) => {
+    setForms((prev) =>
+      prev.length === 1 ? prev : prev.filter((_, i) => i !== idx),
+    );
+  };
+
+  const saveExpenses = () => {
+    alert(JSON.stringify(forms, null, 2));
+    // your save logic here
+  };
 
   return (
     <section>
@@ -53,91 +97,126 @@ export const NewExpenses = () => {
             </VisuallyHidden>
             <h1 className="text-white text-2xl font-medium">Add Expenses</h1>
             <ScrollArea className="h-[40vh] w-full pr-3 ">
-              <div className="flex flex-col gap-5 border-b-2 border-white/30 pb-5 mt-2">
-                {/* Category */}
-                <div className="flex items-center gap-4">
-                  <Label className="text-white text-xl flex-[0_0_30%]">
-                    Category
-                  </Label>
-                  <div className="flex-1">
-                    <Select>
-                      <SelectTrigger className="w-full bg-white/50 backdrop-blur-lg border border-black/20">
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>Select bill</SelectLabel>
-                          <SelectItem value="all">All</SelectItem>
-                          <SelectItem value="transportation">
-                            Transportation
-                          </SelectItem>
-                          <SelectItem value="foods">Foods</SelectItem>
-                          <SelectItem value="utilities">Utilities</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
+              {forms.map((form, idx) => (
+                <div
+                  key={idx}
+                  className="flex flex-col gap-5 border-b-2 border-white/30 pb-5 mt-2"
+                >
+                  {/* Category */}
+                  <div className="flex items-center gap-4">
+                    <Label className="text-white text-xl flex-[0_0_30%]">
+                      Category
+                    </Label>
+                    <div className="flex-1">
+                      <Select
+                        value={form.category}
+                        onValueChange={(value) =>
+                          updateField(idx, "category", value)
+                        }
+                      >
+                        <SelectTrigger className="w-full bg-white/50 backdrop-blur-lg border border-black/20">
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel>Select bill</SelectLabel>
+                            <SelectItem value="all">All</SelectItem>
+                            <SelectItem value="transportation">
+                              Transportation
+                            </SelectItem>
+                            <SelectItem value="foods">Foods</SelectItem>
+                            <SelectItem value="utilities">Utilities</SelectItem>
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                </div>
 
-                {/* Amount */}
-                <div className="flex items-center gap-4">
-                  <Label className="text-white text-xl flex-[0_0_30%]">
-                    Amount
-                  </Label>
-                  <Input
-                    type="text"
-                    className="flex-1 bg-white/50 backdrop-blur-lg border border-black/20 p-2 rounded-md"
-                    placeholder="Enter amount"
-                  />
-                </div>
-
-                {/* Description */}
-                <div className="flex items-center gap-4">
-                  <Label className="text-white text-xl flex-[0_0_30%]">
-                    Description
-                  </Label>
-                  <Input
-                    className="flex-1 bg-white/50 backdrop-blur-lg border border-black/20 p-2 rounded-md"
-                    placeholder="Enter description"
-                  />
-                </div>
-
-                {/* Date */}
-                <div className="flex items-center gap-4">
-                  <Label className="text-white text-xl flex-[0_0_30%]">
-                    Date
-                  </Label>
-                  <div className="flex-1">
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <button className="flex justify-between items-center text-sm py-2 px-3 w-full rounded-md bg-white/50 backdrop-blur-lg border border-black/20 text-black/55">
-                          Date Range
-                          <FontAwesomeIcon icon={faCalendar} className="ml-2" />
-                        </button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-full">
-                        <Calendar
-                          mode="single"
-                          selected={date}
-                          onSelect={setDate}
-                          className="rounded-md"
-                        />
-                      </PopoverContent>
-                    </Popover>
+                  {/* Amount */}
+                  <div className="flex items-center gap-4">
+                    <Label className="text-white text-xl flex-[0_0_30%]">
+                      Amount
+                    </Label>
+                    <Input
+                      type="text"
+                      className="flex-1 bg-white/50 backdrop-blur-lg border border-black/20 p-2 rounded-md"
+                      placeholder="Enter amount"
+                      value={form.amount}
+                      onChange={(e) =>
+                        updateField(idx, "amount", e.target.value)
+                      }
+                    />
                   </div>
+
+                  {/* Description */}
+                  <div className="flex items-center gap-4">
+                    <Label className="text-white text-xl flex-[0_0_30%]">
+                      Description
+                    </Label>
+                    <Input
+                      className="flex-1 bg-white/50 backdrop-blur-lg border border-black/20 p-2 rounded-md"
+                      placeholder="Enter description"
+                      value={form.description}
+                      onChange={(e) =>
+                        updateField(idx, "description", e.target.value)
+                      }
+                    />
+                  </div>
+
+                  {/* Date */}
+                  <div className="flex items-center gap-4">
+                    <Label className="text-white text-xl flex-[0_0_30%]">
+                      Date
+                    </Label>
+                    <div className="flex-1">
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button className="flex justify-between items-center text-sm py-2 px-3 w-full rounded-md bg-white/50 backdrop-blur-lg border border-black/20 text-black/55">
+                            {form.date
+                              ? form.date.toLocaleDateString()
+                              : "Date Range"}
+                            <FontAwesomeIcon
+                              icon={faCalendar}
+                              className="ml-2"
+                            />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full">
+                          <Calendar
+                            mode="single"
+                            selected={form.date}
+                            onSelect={(d) => updateField(idx, "date", d)}
+                            className="rounded-md"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </div>
+                  <Button
+                    className="w-full bg-[#BD2828] opacity-90 hover:bg-red-700"
+                    type="button"
+                    onClick={() => removeForm(idx)}
+                  >
+                    Remove
+                  </Button>
                 </div>
-                <Button className="w-full bg-[#BD2828] opacity-90 hover:bg-red-700">
-                  Remove
-                </Button>
-              </div>
+              ))}
             </ScrollArea>
 
             <div className="grid grid-cols-2 gap-5">
-              <Button className="mt-4 w-full bg-[#688F6B] hover:bg-green-700">
+              <Button
+                className="mt-4 w-full bg-[#688F6B] hover:bg-green-700"
+                onClick={saveExpenses}
+                type="button"
+              >
                 <FontAwesomeIcon icon={faFileArrowDown} className="mr-2" />
                 Save
               </Button>
-              <Button className="mt-4 w-full bg-[#c7cec8] hover:bg-green-700">
+              <Button
+                className="mt-4 w-full bg-[#c7cec8] hover:bg-green-700"
+                type="button"
+                onClick={addForm}
+              >
                 <FontAwesomeIcon icon={faPlus} className="mr-2" />
                 Add Another
               </Button>
