@@ -17,7 +17,8 @@ import {
   faPlus,
   faFileArrowDown,
 } from "@fortawesome/free-solid-svg-icons";
-
+import { Label } from "./ui/label";
+import { NewExpenses } from "./NewExpenses";
 export const TableData = () => {
   const expenses = [
     {
@@ -75,20 +76,35 @@ export const TableData = () => {
               <TableCell className="p-5">{expense.date}</TableCell>
               <TableCell className="p-5">
                 <div className="flex gap-4">
-                  <FontAwesomeIcon
-                    icon={faPenToSquare}
-                    className="text-[#688F6B] opacity-60 cursor-pointer hover:scale-110 transition-transform"
-                  />
-                  <FontAwesomeIcon
-                    icon={faTrashCan}
-                    className="text-[#BD2828]  cursor-pointer hover:scale-110 transition-transform"
-                  />
+                  <div className="flex gap-2 items-center">
+                    {" "}
+                    <FontAwesomeIcon
+                      id="Edit"
+                      icon={faPenToSquare}
+                      className="text-[#688F6B] opacity-60 cursor-pointer text-xl hover:scale-110 transition-transform"
+                    />
+                    <Label htmlFor="Edit" className="font-normal">
+                      Edit
+                    </Label>
+                  </div>
+                  <div className="flex gap-2 items-center">
+                    <FontAwesomeIcon
+                      id="Delete"
+                      icon={faTrashCan}
+                      className="text-[#BD2828]  cursor-pointer text-xl hover:scale-110 transition-transform"
+                    />
+                    <Label htmlFor="Delete" className="font-normal">
+                      Delete
+                    </Label>
+                  </div>
                 </div>
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
+
+      <NewExpenses />
     </div>
   );
 };
