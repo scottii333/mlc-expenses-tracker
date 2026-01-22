@@ -217,14 +217,24 @@ function NewExpensesInner({
                   <SelectTrigger className="w-full bg-white/50 backdrop-blur-lg border border-black/20">
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="h-70">
                     <SelectGroup>
                       <SelectLabel>Select bill</SelectLabel>
                       <SelectItem value="Transportation">
                         Transportation
                       </SelectItem>
-                      <SelectItem value="Food">Food</SelectItem>
+                      <SelectItem value="Food">Foods</SelectItem>
+                      <SelectItem value="Entertainment">
+                        Entertainment
+                      </SelectItem>
+                      <SelectItem value="Health">Health</SelectItem>
+                      <SelectItem value="Education">Education</SelectItem>
+                      <SelectItem value="Gift">Gift</SelectItem>
+                      <SelectItem value="Clothes">Clothes</SelectItem>
+                      <SelectItem value="Household">Household</SelectItem>
+                      <SelectItem value="Pets">Pets</SelectItem>
                       <SelectItem value="Utilities">Utilities</SelectItem>
+                      <SelectItem value="Others">Others</SelectItem>
                     </SelectGroup>
                   </SelectContent>
                 </Select>
