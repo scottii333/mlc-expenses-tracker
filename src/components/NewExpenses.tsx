@@ -6,6 +6,7 @@ import {
   faPlus,
   faCalendar,
   faFileArrowDown,
+  faPenToSquare,
 } from "@fortawesome/free-solid-svg-icons";
 import { Button } from "./ui/button";
 import {
@@ -209,6 +210,8 @@ function NewExpensesInner({
     onSave(rows);
   };
 
+  const isEditing = Boolean(initialExpense);
+
   return (
     <div>
       <VisuallyHidden>
@@ -343,8 +346,11 @@ function NewExpensesInner({
           onClick={saveExpenses}
           type="button"
         >
-          <FontAwesomeIcon icon={faFileArrowDown} className="" />
-          Save
+          <FontAwesomeIcon
+            icon={isEditing ? faPenToSquare : faFileArrowDown}
+            className="mr-2"
+          />
+          {isEditing ? "Update" : "Save"}
         </Button>
 
         <Button
@@ -352,7 +358,7 @@ function NewExpensesInner({
           type="button"
           onClick={addForm}
         >
-          <FontAwesomeIcon icon={faPlus} className="" />
+          <FontAwesomeIcon icon={faPlus} className="mr-2" />
           Add Another
         </Button>
       </div>
