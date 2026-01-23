@@ -228,8 +228,8 @@ function NewExpensesInner({
             className="flex flex-col gap-5 border-b-2 border-white/30 pb-5 mt-2"
           >
             {/* Category */}
-            <div className="flex items-center gap-4">
-              <Label className="text-white text-xl flex-[0_0_30%]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
+              <Label className="text-white text-lg flex-[0_0_30%]">
                 Category
               </Label>
               <div className="flex-1">
@@ -265,8 +265,8 @@ function NewExpensesInner({
             </div>
 
             {/* Amount */}
-            <div className="flex items-center gap-4">
-              <Label className="text-white text-xl flex-[0_0_30%]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
+              <Label className="text-white text-lg flex-[0_0_30%]">
                 Amount
               </Label>
               <Input
@@ -284,8 +284,8 @@ function NewExpensesInner({
             </div>
 
             {/* Description */}
-            <div className="flex items-center gap-4">
-              <Label className="text-white text-xl flex-[0_0_30%]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
+              <Label className="text-white text-lg flex-[0_0_30%]">
                 Description
               </Label>
               <Input
@@ -299,8 +299,8 @@ function NewExpensesInner({
             </div>
 
             {/* Date */}
-            <div className="flex items-center gap-4">
-              <Label className="text-white text-xl flex-[0_0_30%]">Date</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
+              <Label className="text-white text-lg flex-[0_0_30%]">Date</Label>
               <div className="flex-1">
                 <Popover>
                   <PopoverTrigger asChild>
@@ -311,7 +311,7 @@ function NewExpensesInner({
                       <FontAwesomeIcon icon={faCalendar} className="ml-2" />
                     </button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-full">
+                  <PopoverContent className="w-full flex justify-center ">
                     <Calendar
                       mode="single"
                       selected={form.date}
@@ -335,13 +335,13 @@ function NewExpensesInner({
         ))}
       </ScrollArea>
 
-      <div className="grid grid-cols-2 gap-5">
+      <div className="grid grid-cols-2 gap-1">
         <Button
           className="mt-4 w-full bg-[#688F6B] hover:bg-green-700"
           onClick={saveExpenses}
           type="button"
         >
-          <FontAwesomeIcon icon={faFileArrowDown} className="mr-2" />
+          <FontAwesomeIcon icon={faFileArrowDown} className="" />
           Save
         </Button>
 
@@ -350,7 +350,7 @@ function NewExpensesInner({
           type="button"
           onClick={addForm}
         >
-          <FontAwesomeIcon icon={faPlus} className="mr-2" />
+          <FontAwesomeIcon icon={faPlus} className="" />
           Add Another
         </Button>
       </div>
