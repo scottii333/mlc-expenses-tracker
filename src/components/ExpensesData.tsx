@@ -174,19 +174,19 @@ export const ExpensesData = () => {
     <section className="relative w-full flex flex-col space-y-6">
       <h1 className="text-3xl mb-4">Expenses Tracker</h1>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         {stats.map((stat, i) => (
           <div
             key={i}
-            className="w-full max-h-50 aspect-square bg-white/50 backdrop-blur-lg border border-black/20 rounded-lg flex flex-col items-center justify-center"
+            className="w-full max-h-40 aspect-square bg-white/50 backdrop-blur-lg border border-black/20 rounded-lg flex flex-col items-center justify-center text-center"
           >
             <span className="text-xl mb-3">{stat.label}</span>
-            <span className="text-xl">{stat.value}</span>
+            <span className="text-lg">{stat.value}</span>
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-[35%_20%_20%_20%] gap-5 items-baseline space-x-4">
+      <div className="grid grid-cols-1 sm:grid-cols-4 lg:grid-cols-[35%_20%_20%_20%] gap-5 items-baseline space-x-4">
         <div className="relative w-full">
           <Input
             placeholder="Search"
@@ -232,7 +232,7 @@ export const ExpensesData = () => {
             </button>
           </PopoverTrigger>
 
-          <PopoverContent className="w-80 space-y-3">
+          <PopoverContent className="flex flex-col items-center ">
             <Select
               value={preset}
               onValueChange={(v) => applyPreset(v as DatePreset)}
