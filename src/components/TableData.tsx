@@ -154,6 +154,10 @@ export const TableData = ({
     return resp.data.expense;
   };
 
+  function truncateText(text: string, maxLength: number) {
+    return text.length > maxLength ? text.slice(0, maxLength) + "..." : text;
+  }
+
   return (
     <div className="overflow-hidden rounded-xl shadow-md">
       <Table className="min-w-full">
@@ -195,7 +199,9 @@ export const TableData = ({
                 className="border-b border-black last:border-b-0"
               >
                 <TableCell className="p-5">{expense.category}</TableCell>
-                <TableCell className="p-5">{expense.description}</TableCell>
+                <TableCell className="p-5">
+                  {truncateText(expense.description, 30)}
+                </TableCell>
                 <TableCell className="p-5">{expense.amount}</TableCell>
                 <TableCell className="p-5">{expense.date}</TableCell>
                 <TableCell className="p-5">
