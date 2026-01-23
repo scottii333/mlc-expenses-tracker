@@ -38,8 +38,8 @@ export default function Dashboard() {
         />
         <div className="flex justify-between">
           <div className="relative flex items-center space-x-2">
-            <FontAwesomeIcon size="xl" icon={faWallet} />
-            <h1 className="text-xl">Expenza</h1>
+            <FontAwesomeIcon size="lg" icon={faWallet} />
+            <h1 className="text-sm">Expenza</h1>
           </div>
 
           <button
@@ -47,8 +47,8 @@ export default function Dashboard() {
             onClick={handleLogout}
             className="relative flex items-center space-x-2 cursor-pointer hover:scale-105 transition-transform hover:text-red-600"
           >
-            <FontAwesomeIcon size="xl" icon={faArrowRightFromBracket} />
-            <p className="text-xl">Logout</p>
+            <FontAwesomeIcon size="lg" icon={faArrowRightFromBracket} />
+            <p className="text-sm">Logout</p>
           </button>
         </div>
 
