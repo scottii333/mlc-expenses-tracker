@@ -95,10 +95,17 @@ function TableCaption({
   className,
   ...props
 }: React.ComponentProps<"caption">) {
+  // Keep default caption display/position (caption-bottom on the table).
+  // Only apply styling so the caption visually matches the table header.
   return (
     <caption
       data-slot="table-caption"
-      className={cn("text-muted-foreground mt-4 text-sm", className)}
+      className={cn(
+        // Match header look without changing caption semantics/position:
+        // background + opacity + white text + padding + rounded corners + small text
+        "bg-[#688F6B] opacity-60 text-white px-3 py-2 text-sm text-center",
+        className,
+      )}
       {...props}
     />
   );
