@@ -271,6 +271,7 @@ function NewExpensesInner({
               </Label>
               <Input
                 type="text"
+                maxLength={10}
                 className="flex-1 bg-white/50 backdrop-blur-lg border border-black/20 p-2 rounded-md"
                 placeholder="Enter amount"
                 value={form.amount}
@@ -289,6 +290,7 @@ function NewExpensesInner({
                 Description
               </Label>
               <Input
+                maxLength={100}
                 className="flex-1 bg-white/50 backdrop-blur-lg border border-black/20 p-2 rounded-md"
                 placeholder="Enter description"
                 value={form.description}
