@@ -140,6 +140,7 @@ export const LoginPage: React.FC = () => {
                   </label>
                   <input
                     {...register("firstName", { required: mode === "signup" })}
+                    maxLength={30}
                     className="w-full rounded-md px-3 py-2 bg-white/30 placeholder:text-white/60 text-white font-medium outline-none border border-white/25 focus:border-white/50 transition"
                     placeholder={labels.firstName}
                   />
@@ -156,6 +157,7 @@ export const LoginPage: React.FC = () => {
                   </label>
                   <input
                     {...register("lastName", { required: mode === "signup" })}
+                    maxLength={30}
                     className="w-full rounded-md px-3 py-2 bg-white/30 placeholder:text-white/60 text-white font-medium outline-none border border-white/25 focus:border-white/50 transition"
                     placeholder={labels.lastName}
                   />
@@ -183,6 +185,7 @@ export const LoginPage: React.FC = () => {
                     value.trim().toLowerCase().endsWith("@gmail.com") ||
                     "Only Gmail addresses (@gmail.com) are allowed",
                 })}
+                maxLength={50}
                 className="w-full rounded-md px-3 py-2 bg-white/30 placeholder:text-white/60 text-white font-medium outline-none border border-white/25 focus:border-white/50 transition"
                 placeholder="Email"
                 type="email"
@@ -203,6 +206,7 @@ export const LoginPage: React.FC = () => {
               <input
                 type="password"
                 {...register("password", { required: "Password is required" })}
+                maxLength={30}
                 className="w-full rounded-md px-3 py-2 bg-white/30 placeholder:text-white/60 text-white font-medium outline-none border border-white/25 focus:border-white/50 transition"
                 placeholder="Password"
                 autoComplete={
