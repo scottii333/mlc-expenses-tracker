@@ -210,7 +210,7 @@ function NewExpensesInner({
   };
 
   return (
-    <>
+    <div>
       <VisuallyHidden>
         <DialogTitle>
           {initialExpense ? "Edit Expense" : "Add New Expense"}
@@ -356,6 +356,6 @@ function NewExpensesInner({
           Add Another
         </Button>
       </div>
-    </>
+    </div>
   );
 }
