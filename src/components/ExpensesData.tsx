@@ -180,8 +180,8 @@ export const ExpensesData = () => {
             key={i}
             className="w-full max-h-40 aspect-square bg-white/50 backdrop-blur-lg border border-black/20 rounded-lg flex flex-col items-center justify-center text-center"
           >
-            <span className="text-xl mb-3">{stat.label}</span>
-            <span className="text-lg">{stat.value}</span>
+            <span className="text-sm sm:text-lg mb-3">{stat.label}</span>
+            <span className="text-sm sm:text-lg">{stat.value}</span>
           </div>
         ))}
       </div>
