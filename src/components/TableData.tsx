@@ -8,6 +8,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableCaption,
 } from "@/components/ui/table";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrashCan, faPenToSquare } from "@fortawesome/free-solid-svg-icons";
@@ -15,6 +16,18 @@ import { Label } from "./ui/label";
 import { NewExpenses } from "./NewExpenses";
 import api from "@/lib/axios";
 import { toast } from "sonner";
+
+// Alert dialog (confirm) components
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
+import { Button } from "./ui/button";
 
 export type ExpenseRow = {
   id: number;
@@ -39,6 +52,10 @@ function parseYYYYMMDD(value: string): Date | undefined {
   return new Date(y, m - 1, d);
 }
 
+function formatPeso(n: number) {
+  return `₱${Math.round(n).toLocaleString()}`;
+}
+
 export const TableData = ({
   filters,
   onExpensesChange,
@@ -51,6 +68,11 @@ export const TableData = ({
 
   const [openExpensesDialog, setOpenExpensesDialog] = useState(false);
   const [editExpense, setEditExpense] = useState<ExpenseRow | null>(null);
+
+  // delete confirmation dialog state
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<ExpenseRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     onExpensesChange?.(expenses);
@@ -125,22 +147,54 @@ export const TableData = ({
     });
   }, [expenses, filters]);
 
+  // total of currently visible (filtered) expenses
+  const totalVisible = useMemo(
+    () => filteredExpenses.reduce((acc, e) => acc + (Number(e.amount) || 0), 0),
+    [filteredExpenses],
+  );
+
+  // caption text depends on dateRange (if provided) otherwise show "All shown"
+  const captionText = useMemo(() => {
+    const range = filters.dateRange;
+    let rangeLabel = "All time";
+    if (range?.from && range?.to) {
+      rangeLabel = `${range.from.toLocaleDateString()} - ${range.to.toLocaleDateString()}`;
+    } else if (range?.from && !range?.to) {
+      rangeLabel = `${range.from.toLocaleDateString()}`;
+    } else if (!range?.from && range?.to) {
+      rangeLabel = `Until ${range.to.toLocaleDateString()}`;
+    } else if (!range) {
+      rangeLabel = "All time";
+    }
+
+    return `Total (${rangeLabel}): ${formatPeso(totalVisible)}`;
+  }, [filters.dateRange, totalVisible]);
+
   const handleEdit = (expense: ExpenseRow) => {
     setEditExpense(expense);
     setOpenExpensesDialog(true);
   };
 
-  const handleDelete = async (id: number) => {
-    try {
-      await api.delete(`/expenses/${id}`);
-      setExpenses((prev) => {
-        const next = prev.filter((x) => x.id !== id);
+  // Open confirmation dialog for deletion
+  const requestDelete = (expense: ExpenseRow) => {
+    setPendingDelete(expense);
+    setConfirmOpen(true);
+  };
 
-        return next;
-      });
+  // Perform deletion after user confirms
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleting(true);
+    try {
+      await api.delete(`/expenses/${pendingDelete.id}`);
+      setExpenses((prev) => prev.filter((x) => x.id !== pendingDelete.id));
       toast.success("Deleted");
     } catch {
       toast.error("Delete failed");
+    } finally {
+      setDeleting(false);
+      setConfirmOpen(false);
+      setPendingDelete(null);
     }
   };
 
@@ -159,144 +213,207 @@ export const TableData = ({
   }
 
   return (
-    <div className="overflow-hidden rounded-xl shadow-md">
-      <Table className="min-w-full">
-        <TableHeader className="bg-[#688F6B] opacity-60">
-          <TableRow>
-            <TableHead className="text-white p-5 border-r-2 border-white">
-              Category
-            </TableHead>
-            <TableHead className="text-white p-5 border-r-2 border-white">
-              Description
-            </TableHead>
-            <TableHead className="text-white p-5 border-r-2 border-white">
-              Amount
-            </TableHead>
-            <TableHead className="text-white p-5 border-r-2 border-white">
-              Date
-            </TableHead>
-            <TableHead className="text-white p-5">Action</TableHead>
-          </TableRow>
-        </TableHeader>
+    <>
+      <div className="overflow-hidden rounded-xl shadow-md">
+        <Table className="min-w-full">
+          <TableCaption>{captionText}</TableCaption>
 
-        <TableBody className="bg-white/30 backdrop-blur-lg border border-black/20 rounded-b-xl">
-          {loading ? (
+          <TableHeader className="bg-[#688F6B] opacity-60">
             <TableRow>
-              <TableCell className="p-5 text-center" colSpan={5}>
-                Loading...
-              </TableCell>
+              <TableHead className="text-white p-5 border-r-2 border-white">
+                Category
+              </TableHead>
+              <TableHead className="text-white p-5 border-r-2 border-white">
+                Description
+              </TableHead>
+              <TableHead className="text-white p-5 border-r-2 border-white">
+                Amount
+              </TableHead>
+              <TableHead className="text-white p-5 border-r-2 border-white">
+                Date
+              </TableHead>
+              <TableHead className="text-white p-5">Action</TableHead>
             </TableRow>
-          ) : filteredExpenses.length === 0 ? (
-            <TableRow>
-              <TableCell className="p-5 text-center" colSpan={5}>
-                No expenses yet.
-              </TableCell>
-            </TableRow>
-          ) : (
-            filteredExpenses.map((expense) => (
-              <TableRow
-                key={expense.id}
-                className="border-b border-black last:border-b-0"
-              >
-                <TableCell className="p-5">{expense.category}</TableCell>
-                <TableCell className="p-5">
-                  {truncateText(expense.description, 30)}
-                </TableCell>
-                <TableCell className="p-5">{expense.amount}</TableCell>
-                <TableCell className="p-5">{expense.date}</TableCell>
-                <TableCell className="p-5">
-                  <div className="flex gap-4">
-                    <div className="flex gap-2 items-center">
-                      <FontAwesomeIcon
-                        id={`Edit-${expense.id}`}
-                        icon={faPenToSquare}
-                        className="text-[#688F6B] opacity-60 cursor-pointer text-xl hover:scale-110 transition-transform"
-                        onClick={() => handleEdit(expense)}
-                      />
-                      <Label
-                        htmlFor={`Edit-${expense.id}`}
-                        className="font-normal cursor-pointer"
-                        onClick={() => handleEdit(expense)}
-                      >
-                        Edit
-                      </Label>
-                    </div>
+          </TableHeader>
 
-                    <div className="flex gap-2 items-center">
-                      <FontAwesomeIcon
-                        id={`Delete-${expense.id}`}
-                        icon={faTrashCan}
-                        className="text-[#BD2828] cursor-pointer text-xl hover:scale-110 transition-transform"
-                        onClick={() => handleDelete(expense.id)}
-                      />
-                      <Label
-                        htmlFor={`Delete-${expense.id}`}
-                        className="font-normal cursor-pointer"
-                        onClick={() => handleDelete(expense.id)}
-                      >
-                        Delete
-                      </Label>
-                    </div>
-                  </div>
+          <TableBody className="bg-white/30 backdrop-blur-lg border border-black/20 rounded-b-xl">
+            {loading ? (
+              <TableRow>
+                <TableCell className="p-5 text-center" colSpan={5}>
+                  Loading...
                 </TableCell>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+            ) : filteredExpenses.length === 0 ? (
+              <TableRow>
+                <TableCell className="p-5 text-center" colSpan={5}>
+                  No expenses yet.
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredExpenses.map((expense) => (
+                <TableRow
+                  key={expense.id}
+                  className="border-b border-black last:border-b-0"
+                >
+                  <TableCell className="p-5">{expense.category}</TableCell>
+                  <TableCell className="p-5">
+                    {truncateText(expense.description, 30)}
+                  </TableCell>
+                  <TableCell className="p-5">{expense.amount}</TableCell>
+                  <TableCell className="p-5">{expense.date}</TableCell>
+                  <TableCell className="p-5">
+                    <div className="flex gap-4">
+                      <div className="flex gap-2 items-center">
+                        <FontAwesomeIcon
+                          id={`Edit-${expense.id}`}
+                          icon={faPenToSquare}
+                          className="text-[#688F6B] opacity-60 cursor-pointer text-xl hover:scale-110 transition-transform"
+                          onClick={() => handleEdit(expense)}
+                        />
+                        <Label
+                          htmlFor={`Edit-${expense.id}`}
+                          className="font-normal cursor-pointer"
+                          onClick={() => handleEdit(expense)}
+                        >
+                          Edit
+                        </Label>
+                      </div>
 
-      <NewExpenses
-        open={openExpensesDialog}
-        onOpenChange={(next) => {
-          setOpenExpensesDialog(next);
-          if (!next) setEditExpense(null);
-        }}
-        initialExpense={editExpense}
-        onSaveExpenses={async (rows) => {
-          try {
-            const toUpdate = rows.find((r) => r.id !== 0);
-            const toCreate = rows.filter((r) => r.id === 0);
+                      <div className="flex gap-2 items-center">
+                        <button
+                          aria-label={`Delete expense ${expense.description}`}
+                          className="flex items-center gap-2"
+                          onClick={() => requestDelete(expense)}
+                        >
+                          <FontAwesomeIcon
+                            id={`Delete-${expense.id}`}
+                            icon={faTrashCan}
+                            className="text-[#BD2828] cursor-pointer text-xl hover:scale-110 transition-transform"
+                          />
+                          <Label
+                            htmlFor={`Delete-${expense.id}`}
+                            className="font-normal cursor-pointer"
+                            onClick={() => requestDelete(expense)}
+                          >
+                            Delete
+                          </Label>
+                        </button>
+                      </div>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
 
-            if (toUpdate) {
-              const updated = await updateExpense(toUpdate.id, {
-                category: toUpdate.category,
-                description: toUpdate.description,
-                amount: toUpdate.amount,
-                date: toUpdate.date,
-              });
+        <NewExpenses
+          open={openExpensesDialog}
+          onOpenChange={(next) => {
+            setOpenExpensesDialog(next);
+            if (!next) setEditExpense(null);
+          }}
+          initialExpense={editExpense}
+          onSaveExpenses={async (rows) => {
+            try {
+              const toUpdate = rows.find((r) => r.id !== 0);
+              const toCreate = rows.filter((r) => r.id === 0);
 
-              setExpenses((prev) => {
-                const next = prev.map((e) =>
-                  e.id === updated.id ? updated : e,
-                );
-
-                return next;
-              });
-            }
-
-            if (toCreate.length) {
-              const created: ExpenseRow[] = [];
-              for (const row of toCreate) {
-                const createdRow = await createExpense({
-                  category: row.category,
-                  description: row.description,
-                  amount: row.amount,
-                  date: row.date,
+              if (toUpdate) {
+                const updated = await updateExpense(toUpdate.id, {
+                  category: toUpdate.category,
+                  description: toUpdate.description,
+                  amount: toUpdate.amount,
+                  date: toUpdate.date,
                 });
-                created.push(createdRow);
+
+                setExpenses((prev) => {
+                  const next = prev.map((e) =>
+                    e.id === updated.id ? updated : e,
+                  );
+
+                  return next;
+                });
               }
 
-              setExpenses((prev) => {
-                const next = [...created, ...prev];
+              if (toCreate.length) {
+                const created: ExpenseRow[] = [];
+                for (const row of toCreate) {
+                  const createdRow = await createExpense({
+                    category: row.category,
+                    description: row.description,
+                    amount: row.amount,
+                    date: row.date,
+                  });
+                  created.push(createdRow);
+                }
 
-                return next;
-              });
+                setExpenses((prev) => {
+                  const next = [...created, ...prev];
+
+                  return next;
+                });
+              }
+            } catch {
+              toast.error("Save failed");
             }
-          } catch {
-            toast.error("Save failed");
+          }}
+        />
+      </div>
+
+      {/* Confirm delete dialog */}
+      <AlertDialog
+        open={confirmOpen}
+        onOpenChange={(o) => {
+          setConfirmOpen(o);
+          if (!o) {
+            setPendingDelete(null);
+            setDeleting(false);
           }
         }}
-      />
-    </div>
+      >
+        <AlertDialogContent className=" border  border-black/50 ">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-center">
+              Confirm delete
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-black/70 mt-4 text-center">
+              {pendingDelete ? (
+                <>
+                  Are you sure you want to permanently delete
+                  <span className="font-semibold">
+                    {" "}
+                    {pendingDelete.category}{" "}
+                  </span>
+                  <span className="italic  font-semibold">
+                    {truncateText(pendingDelete.description, 60)}
+                  </span>
+                  <span className="font-medium"> {pendingDelete.date}</span>?
+                  This action cannot be undone.
+                </>
+              ) : (
+                "Are you sure you want to delete this expense? This action cannot be undone."
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel className="" disabled={deleting}>
+              Cancel
+            </AlertDialogCancel>
+            <Button
+              onClick={async (e) => {
+                e?.preventDefault?.();
+                await confirmDelete();
+              }}
+              disabled={deleting}
+              className="bg-[#BD2828] opacity-90 hover:bg-[#a82323] text-white "
+            >
+              {deleting ? "Deleting..." : "Delete"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
